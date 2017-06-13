@@ -16,6 +16,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
       }
       $data_string = rtrim($data_string,",");
       $data_string = $data_string . ']}';
+      file_put_contents("curl.log","Will POST " . $data_string . " to ". $slack_webhook_url);
       $cl = curl_init($slack_webhook_url);
       curl_setopt($cl,"POST");
       curl_setopt($cl, CURLOPT_POSTFIELDS, $data_string);

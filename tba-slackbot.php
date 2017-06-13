@@ -12,7 +12,11 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
       $data_string = '{"text": "Match coming up!","attachments":[';
       foreach($md["team_keys"] as $key) {
         $team = str_replace("frc","",$key);
-        $data_string = $data_string . '{ "text": "<https://momentum4999.com/scouting/info.php?team='.$team.'|Team '.$team.'>" },';
+        $data_string = $data_string . '{ "text": "<https://momentum4999.com/scouting/info.php?team='.$team.'|Team '.$team.'>"';
+        if($team == "4999") {
+          $data_string = $data_string . ', "color" : "#06ceff"';
+        }
+        $data_string = $data_string . ' },';
       }
       $data_string = rtrim($data_string,",");
       $data_string = $data_string . ']}';

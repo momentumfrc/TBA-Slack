@@ -9,10 +9,10 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
       file_put_contents("key.txt",$md["verification_key"]);
       break;
     case "upcoming_match":
-      $data_string = '{"text": "Match coming up!","attachments":['
+      $data_string = '{"text": "Match coming up!","attachments":[';
       foreach($md["team_keys"] as $key) {
         $team = str_replace("frc","",$key);
-        $data_string = $data_string . '{ "text": "<https://momentum4999.com/scouting/info.php?team="'.$team.'|Team '.$team.'>" },'
+        $data_string = $data_string . '{ "text": "<https://momentum4999.com/scouting/info.php?team="'.$team.'|Team '.$team.'>" },';
       }
       $data_string = rtrim($data_string,",");
       $data_string = $data_string . ']}';

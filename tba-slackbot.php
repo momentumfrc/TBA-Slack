@@ -1,5 +1,9 @@
 <?php
-$slack_webhook_url = file_get_contents("slack_url.cfg");
+function writeToLog($string, $log) {
+	file_put_contents($log.".log", date("d-m-Y_h:i:s")."-- ".$string."\r\n", FILE_APPEND);
+}
+
+$slack_webhook_url = rtrim(file_get_contents("slack_url.cfg"));
 
 if($_SERVER["REQUEST_METHOD"] == "POST") {
   $data = json_decode(file_get_contents('php://input'),true);
@@ -20,16 +24,15 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
       }
       $data_string = rtrim($data_string,",");
       $data_string = $data_string . ']}';
-      file_put_contents("curl.log","Will POST " . $data_string . " to ". $slack_webhook_url);
-      $cl = curl_init($slack_webhook_url);
-      curl_setopt($cl,"POST");
-      curl_setopt($cl, CURLOPT_POSTFIELDS, $data_string);
+      writeToLog("Will POST " . $data_string . ' to ' . $slack_webhook_url, "curl" );
+      $ch = curl_init($slack_webhook_url);
+      curl_setopt($ch, CURLOPT_POSTFIELDS, $data_string);
+      curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
       curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-      curl_setopt($cl,array(
-        "Content-type: application/json",
-        'content-length: '.strlen($data_string)
-      ));
-      curl_exec($cl);
+      $result = curl_exec($ch);
+      curl_close($ch);
+      writeToLog("Posted " . $data_string . ' to ' . $slack_webhook_url . ' with a result of ' . $result,"curl");
+      //file_put_contents("curl.log","---POSTed " . $data_string . " to ". $slack_webhook_url . " with a result of" . $result, FILE_APPEND);
       break;
   }
 } else {

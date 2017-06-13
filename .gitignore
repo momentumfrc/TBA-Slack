@@ -1,3 +1,4 @@
 *.log
+*.cfg
 key.txt
 index.php

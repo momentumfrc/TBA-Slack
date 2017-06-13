@@ -1,5 +1,5 @@
 <?php
-$slack_webhook_url = "";
+$slack_webhook_url = file_get_contents("slack_url.cfg");
 
 if($_SERVER["REQUEST_METHOD"] == "POST") {
   $data = json_decode(file_get_contents('php://input'),true);

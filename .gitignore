@@ -1,2 +1,3 @@
-error.log
+*.log
+key.txt
 index.php

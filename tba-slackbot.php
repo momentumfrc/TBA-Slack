@@ -13,7 +13,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
       file_put_contents("key.txt",$md["verification_key"]);
       break;
     case "upcoming_match":
-      $match = queryAPI($md["match_key"], $tba_api3_key);
+      $match = queryAPI('/match/'.$md["match_key"], $tba_api3_key);
       $data_string = '{"text": "Match ' . $match["match_number"] . ' coming up!","attachments":[';
       // BLUE
       foreach($match["alliances"]["blue"]["team_keys"] as $key) {

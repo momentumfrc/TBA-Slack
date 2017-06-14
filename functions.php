@@ -9,7 +9,7 @@ function writeToLog($string, $log) {
 
 function queryAPI($url, $key) {
   if($key !== false) {
-    $url = 'https://www.thebluealliance.com/api/v3/match/' . $url;
+    $url = 'https://www.thebluealliance.com/api/v3' . $url;
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_HTTPHEADER, array( 'X-TBA-Auth-Key: '. $key ));

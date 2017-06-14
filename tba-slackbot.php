@@ -21,6 +21,15 @@ function queryAPI($url, $key) {
     return json_decode($data, true);
   }
 }
+function postToSlack($json, $url) {
+	$ch = curl_init($url);
+	curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
+	curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+	$result = curl_exec($ch);
+	curl_close($ch);
+	return $result;
+}
 
 
 if($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -60,15 +69,30 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
       }
       $data_string = rtrim($data_string,",");
       $data_string = $data_string . ']}';
-      writeToLog("Will POST " . $data_string . ' to ' . $slack_webhook_url, "curl" );
-      $ch = curl_init($slack_webhook_url);
-      curl_setopt($ch, CURLOPT_POSTFIELDS, $data_string);
-      curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
-      curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-      $result = curl_exec($ch);
-      curl_close($ch);
-      writeToLog("Posted " . $data_string . ' to ' . $slack_webhook_url . ' with a result of ' . $result,"curl");
+      $result = postToSlack($data_string, $slack_webhook_url);
       break;
+		case "match_score":
+			$match = $md["match"];
+			if(in_array("frc4999",$match["alliances"]["blue"]["teams"])) {
+				if($match["alliances"]["blue"]["score"] > $match["alliances"]["red"]["score"]) {
+					$message = '{"text": "Congratulations Momentum!\n Match '.$match["match_number"].' won *'.$match["alliances"]["blue"]["score"].'*-'.$match["alliances"]["red"]["score"].'"}';
+				} elseif($match["alliances"]["blue"]["score"] < $match["alliances"]["red"]["score"]) {
+					$message = '{"text": "Better luck next time!\n Match '.$match["match_number"].' lost '.$match["alliances"]["blue"]["score"].'-*'.$match["alliances"]["red"]["score"].'*"}';
+				} elseif($match["alliances"]["blue"]["score"] == $match["alliances"]["red"]["score"]) {
+					$message = '{"text": "Good job Momentum!\n Match '.$match["match_number"].' tied '.$match["alliances"]["blue"]["score"].'-'.$match["alliances"]["red"]["score"].'"}';
+				}
+			} elseif(in_array("frc4999",$match["alliances"]["red"]["teams"])) {
+				if($match["alliances"]["red"]["score"] > $match["alliances"]["blue"]["score"]) {
+					$message = '{"text": "Congratulations Momentum!\n Match '.$match["match_number"].' won *'.$match["alliances"]["red"]["score"].'*-'.$match["alliances"]["blue"]["score"].'"}';
+				} elseif($match["alliances"]["red"]["score"] < $match["alliances"]["blue"]["score"]) {
+					$message = '{"text": "Better luck next time!\n Match '.$match["match_number"].' lost '.$match["alliances"]["red"]["score"].'-*'.$match["alliances"]["blue"]["score"].'*"}';
+				} elseif($match["alliances"]["red"]["score"] == $match["alliances"]["blue"]["score"]) {
+					$message = '{"text": "Good job Momentum!\n Match '.$match["match_number"].' tied '.$match["alliances"]["red"]["score"].'-'.$match["alliances"]["blue"]["score"].'"}';
+				}
+			} else {
+				$message = $message = '{"text": "Match Complete!\n Match '.$match["match_number"].' finished '.$match["alliances"]["blue"]["score"].'-'.$match["alliances"]["red"]["score"].'"}';
+			}
+			$result = postToSlack($message, $slack_webhook_url);
   }
 } else {
   if(file_exists("key.txt")) {

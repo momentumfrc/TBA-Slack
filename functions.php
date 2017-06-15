@@ -28,4 +28,14 @@ function postToSlack($json, $url) {
 	curl_close($ch);
 	return $result;
 }
+function stopTimeout() {
+  ignore_user_abort(true);
+  ob_start();
+  header("HTTP/1.1 200 OK");
+  header('Connection: close');
+  header('Content-Length: '.ob_get_length());
+  ob_end_flush();
+  ob_flush();
+  flush();
+}
 ?>

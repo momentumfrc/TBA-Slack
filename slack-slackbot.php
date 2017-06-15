@@ -8,6 +8,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
     writeToLog($_POST["command"].' has a verb of ' . $opts[0] . ' and options of '.$opts[1],"slash");
     switch($opts[0]) {
       case "score":
+        stopTimeout();
         if(!array_key_exists(1,$opts)) {
           $team = 4999;
         } else {

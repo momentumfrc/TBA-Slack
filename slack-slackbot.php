@@ -29,7 +29,11 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
         $teamEvent = queryAPI('/team/frc'.$team.'/event/'.$newestEvent[1]["key"].'/status',$tba_api3_key);
         writeToLog('Status: ' . $teamEvent["overall_status_str"],'score');
         $status = rtrim(str_replace(array('<b>','</b>'),"*",$teamEvent["overall_status_str"]),'.');
-        postToSlack('{"response_type": "in_channel", "text":"At '.$newestEvent[1]["name"].', '.$status.'"}', $url);
+        if(isset($status) and isset($newestEvent[1]["name"])) {
+          postToSlack('{"response_type": "in_channel", "text":"At '.$newestEvent[1]["name"].', '.$status.'"}', $url);
+        } else {
+          postToSlack('{"response_type": "ephemeral", "text":"An error ocurred while retrieving data for team '.$team.'"}', $url);
+        }
         break;
       case "help":
         postToSlack('{"response_type": "ephemeral",
@@ -37,9 +41,10 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
             {
               "text" : "/tba score [team number]\nPrints a team\'s standing in the most recent match that team has competed in. If team number is not supplied, defaults to 4999."
             }, {
-              "help": "/tba help\nDisplays this help message"
+              "text": "/tba help\nDisplays this help message"
             }
-             ]}');
+             ]}', $url);
+        break;
       default:
         postToSlack('{"response_type": "ephemeral", "text":"I\'m sorry, but that\'s not a valid command\n For help, type /tba help"}', $url);
         break;

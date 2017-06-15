@@ -36,15 +36,23 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
           postToSlack('{"response_type": "ephemeral", "text":"An error ocurred while retrieving data for team '.$team.'"}', $url);
         }
         break;
+      case "team":
+        if(!array_key_exists(1,$opts)) {
+          postToSlack('{"response_type" : "ephemeral", "text" : "Usage: ", "attachments":[{"text":"/tba team [team number]\nReturns a link to the scouting app for the given team"}]}', $url);
+        } else {
+          postToSlack('{"response_type" : "ephemeral", "attachments":[{"text" : "<https://momentum4999.com/scouting/info.php?team='.urlencode($opts[1]).'|Team '.$opts[1].'>"}]}', $url);
+        }
+        break;
       case "help":
         postToSlack('{"response_type": "ephemeral",
           "text":"The Blue Alliance interface bot. Connects to the Blue Alliance to retrieve data concerning the FIRST Robotics Competition.\n Usage:","attachments":[
             {
               "text" : "/tba score [team number]\nPrints a team\'s standing in the most recent match that team has competed in. If team number is not supplied, defaults to 4999."
             }, {
+              "text" : "/tba team [team number]\nReturns a link to the scouting app for the given team"
+            }, {
               "text": "/tba help\nDisplays this help message"
-            }
-             ]}', $url);
+            }]}', $url);
         break;
       default:
         postToSlack('{"response_type": "ephemeral", "text":"I\'m sorry, but that\'s not a valid command\n For help, type /tba help"}', $url);

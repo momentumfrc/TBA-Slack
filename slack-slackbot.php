@@ -5,10 +5,10 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
   if($_POST["token"] == $slack_token) {
     $url = $_POST["response_url"];
     $opts = str_getcsv($_POST["text"], ' ');
+    stopTimeout();
     writeToLog($_POST["command"].' has a verb of ' . $opts[0] . ' and options of '.$opts[1],"slash");
     switch($opts[0]) {
       case "score":
-        stopTimeout();
         if(!array_key_exists(1,$opts)) {
           $team = 4999;
         } else {
@@ -43,6 +43,9 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
           postToSlack('{"response_type" : "ephemeral", "attachments":[{"text" : "<https://momentum4999.com/scouting/info.php?team='.urlencode($opts[1]).'|Team '.$opts[1].'>"}]}', $url);
         }
         break;
+      case "match":
+        // Return next upcoming match
+      break;
       case "help":
         postToSlack('{"response_type": "ephemeral",
           "text":"The Blue Alliance interface bot. Connects to the Blue Alliance to retrieve data concerning the FIRST Robotics Competition.\n Usage:","attachments":[

@@ -31,7 +31,6 @@ function postToSlack($json, $url) {
 function stopTimeout() {
   ignore_user_abort(true);
   ob_start();
-  header("HTTP/1.1 200 OK");
   header('Connection: close');
   header('Content-Length: '.ob_get_length());
   ob_end_flush();

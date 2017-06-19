@@ -1,6 +1,5 @@
 <?php
 require 'functions.php';
-$slack_token = rtrim(file_get_contents("slack_verification_token.cfg"));
 if($_SERVER["REQUEST_METHOD"] == "POST") {
   if($_POST["token"] == $slack_token) {
     $url = $_POST["response_url"];

@@ -44,21 +44,84 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
         }
         break;
       case "match":
+        stopTimeout();
         // Return next upcoming match
+        $team = 4999;
+        $events = queryAPI('/team/frc'.$team.'/events/'.date('Y'),$tba_api3_key);
+        $newestEvent = array(0);
+        foreach($events as $event){
+          $date = DateTime::createFromFormat('Y-m-d',$event["start_date"]);
+          if($date->getTimestamp() > $newestEvent[0]) {
+            $newestEvent[1] = $event;
+            $newestEvent[0] = $date->getTimestamp();
+          }
+        }
+        $matches = queryAPI('/team/frc'.$team.'/event/'.$newestEvent[1]["key"].'/matches');
+        $tmatch = array();
+        foreach($matches as $match) {
+          // I'm not sure if this will work. I can't check the api right now to see what "actual_time" is set to on a planned match that hasn't occured yet
+          if($match["actual_time"] == "0" ) {
+            if(isset($tmatch[0])) {
+              if($match["match_number"] < $tmatch[0]){
+                $tmatch[0] = $match["match_number"];
+                $tmatch[1] = $match;
+              }
+            } else {
+              $tmatch[0] = $match["match_number"];
+              $tmatch[1] = $match;
+            }
+          }
+        }
+        if(isset($tmatch[1])) {
+          $alliances = array();
+          $index = 0;
+          foreach($tmatch[1]["alliances"]["blue"]["team_keys"] as $key) {
+            $team = str_replace("frc","",$key);
+            $alliances[$index] = array("text" => '<https://momentum4999.com/scouting/info.php?team='.$team.'|Team '.$team.'>');
+            if($team == "4999") {
+              $alliances[$index]["color"] = '#06ceff';
+            } else {
+              $alliances[$index]["color"] = '#148be5';
+            }
+            $index++;
+          }
+          // RED
+          foreach($tmatch[1]["alliances"]["red"]["team_keys"] as $key) {
+            $team = str_replace("frc","",$key);
+            $alliances[$index] = array("text" => '<https://momentum4999.com/scouting/info.php?team='.$team.'|Team '.$team.'>');
+            if($team == "4999") {
+              $alliances[$index]["color"] = '#ff2200';
+            } else {
+              $alliances[$index]["color"] = '#d60c0c';
+            }
+            $index++;
+          }
+            postToSlack(json_encode(array(
+              "response_type"=>"in_channel",
+              "text"=>"The next match, number ".$tmatch[1]["match_number"].", will occur at ".date("g:i",$tmatch[1]["predicted_time"].'\n Alliances: '),
+              "attachments"=> $alliances
+            ), JSON_UNESCAPED_SLASHES),$url);
+        } else {
+          postToSlack(json_encode(array(
+            "response_type"=>"ephemeral",
+            "text"=>"There don't seem to be any upcoming matches"
+          )), $url);
+        }
       break;
       case "help":
-        postToSlack('{"response_type": "ephemeral",
-          "text":"The Blue Alliance interface bot. Connects to the Blue Alliance to retrieve data concerning the FIRST Robotics Competition.\n Usage:","attachments":[
-            {
-              "text" : "/tba score [team number]\nPrints a team\'s standing in the most recent match that team has competed in. If team number is not supplied, defaults to 4999."
-            }, {
-              "text" : "/tba team [team number]\nReturns a link to the scouting app for the given team"
-            }, {
-              "text": "/tba help\nDisplays this help message"
-            }]}', $url);
+        postToSlack(json_encode(array(
+          "response_type"=>"ephemeral",
+          "text"=>"The Blue Alliance interface bot. Connects to the Blue Alliance to retrieve data concerning the FIRST Robotics Competition.\n Usage:",
+          "attachments" => array(
+              array("text" => "/tba score [team number]\nPrints a team's standing in the most recent match that team has competed in. If team number is not supplied, defaults to 4999."),
+              array("text" => "/tba team [team number]\nReturns a link to the scouting app for the given team"),
+              array("text" => "/tba match\nReturns info about the next upcoming match"),
+              array("text" => "/tba help\nDisplays this help message")
+          )
+        ), JSON_UNESCAPED_SLASHES), $url);
         break;
       default:
-        postToSlack('{"response_type": "ephemeral", "text":"I\'m sorry, but that\'s not a valid command\n For help, type /tba help"}', $url);
+        postToSlack(json_encode(array('response_type' => 'ephemeral', 'text' => "I'm sorry, but that's not a valid command\n For help, type /tba help"), JSON_UNESCAPED_SLASHES), $url);
         break;
     }
 

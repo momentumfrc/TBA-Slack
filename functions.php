@@ -1,7 +1,6 @@
 <?php
 // Stored in a separate file so that it's not publically visible in the github
-$slack_webhook_url = rtrim(file_get_contents("slack_url.cfg"));
-$tba_api3_key=rtrim(file_get_contents("api_key.cfg"));
+require 'auths.php';
 
 function writeToLog($string, $log) {
 	file_put_contents($log.".log", date("d-m-Y_h:i:s")."-- ".$string."\r\n", FILE_APPEND);

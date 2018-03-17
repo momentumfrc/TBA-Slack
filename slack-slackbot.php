@@ -1,5 +1,26 @@
 <?php
 require 'functions.php';
+date_default_timezone_set("America/Los_Angeles");
+
+function getCurrentEvent($team) {
+  global $tba_api3_key;
+  writeToLog('Querying TBA at ' . 'team/frc'.$team.'/events/simple using key '.$tba_api3_key, 'event');
+  $events = queryAPI('/team/frc'.$team.'/events/simple',$tba_api3_key);
+  $date = DateTime::createFromFormat('Y-m-d',$events[0]["start_date"]);
+  writeToLog("Event ".$events[0]["name"]." at ".$events[0]["start_date"]." is ".abs($date->getTimestamp()-time()).'ms away','event');
+  $nEv = $events[0];
+  $nEvTime = abs($date->getTimestamp()-time());
+  #writeToLog("newestEvent:(".$nEvTime.', '.json_encode($nEv).')','event');
+  foreach($events as $event){
+    $date = DateTime::createFromFormat('Y-m-d',$event["start_date"]);
+    writeToLog('Event '.$event["name"]. ' at ' .$event["start_date"] . ' is ' . abs(time()-$date->getTimestamp()).'ms away','event');
+    if(abs(time()-$date->getTimestamp()) < $nEvTime && $date->getTimestamp()-time()<0) {
+      $nEv = $event;
+      $nEvTime = abs(time()-$date->getTimestamp());
+    }
+  }
+  return $nEv;
+}
 if($_SERVER["REQUEST_METHOD"] == "POST") {
   if($_POST["token"] == $slack_token) {
     $url = $_POST["response_url"];
@@ -14,23 +35,13 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
           $team = $opts[1];
         }
         writeToLog('Getting the score of '.$team,'score');
-        writeToLog('Querying TBA at ' . 'team/frc'.$team.'/events/'.date('Y') .' using key '.$tba_api3_key, 'score');
-        $events = queryAPI('/team/frc'.$team.'/events/'.date('Y'),$tba_api3_key);
-        $newestEvent = array(0);
-        foreach($events as $event){
-          $date = DateTime::createFromFormat('Y-m-d',$event["start_date"]);
-          writeToLog('Event '.$event["name"]. ' at ' .$event["start_date"] . ' at ' . $date->getTimestamp(),'score');
-          if($date->getTimestamp() > $newestEvent[0]) {
-            $newestEvent[1] = $event;
-            $newestEvent[0] = $date->getTimestamp();
-          }
-        }
-        writeToLog('Querying event '.$newestEvent[1]["key"],"score");
-        $teamEvent = queryAPI('/team/frc'.$team.'/event/'.$newestEvent[1]["key"].'/status',$tba_api3_key);
+        $nEv = getCurrentEvent($team);
+        writeToLog('Querying event '.$nEv["key"],"score");
+        $teamEvent = queryAPI('/team/frc'.$team.'/event/'.$nEv["key"].'/status',$tba_api3_key);
         writeToLog('Status: ' . $teamEvent["overall_status_str"],'score');
         $status = rtrim(str_replace(array('<b>','</b>'),"*",$teamEvent["overall_status_str"]),'.');
-        if(isset($status) and isset($newestEvent[1]["name"])) {
-          postToSlack('{"response_type": "in_channel", "text":"At '.$newestEvent[1]["name"].', '.$status.'"}', $url);
+        if(isset($status) and isset($nEv["name"]) and !empty($status)) {
+          postToSlack('{"response_type": "in_channel", "text":"At '.$nEv["name"].', '.$status.'"}', $url);
         } else {
           postToSlack('{"response_type": "ephemeral", "text":"An error ocurred while retrieving data for team '.$team.'"}', $url);
         }
@@ -45,39 +56,37 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
       case "match":
         stopTimeout();
         // Return next upcoming match
-        $team = 4999;
-        $events = queryAPI('/team/frc'.$team.'/events/'.date('Y'),$tba_api3_key);
-        $newestEvent = array(0);
-        foreach($events as $event){
-          $date = DateTime::createFromFormat('Y-m-d',$event["start_date"]);
-          if($date->getTimestamp() > $newestEvent[0]) {
-            $newestEvent[1] = $event;
-            $newestEvent[0] = $date->getTimestamp();
-          }
+        if(!array_key_exists(1,$opts)) {
+          $team = 4999;
+        } else {
+          $team = $opts[1];
         }
-        $matches = queryAPI('/team/frc'.$team.'/event/'.$newestEvent[1]["key"].'/matches');
-        $tmatch = array();
+        $nEv = getCurrentEvent($team);
+        writeToLog('Querying '.'/team/frc'.$team.'/event/'.$nEv["key"].'/matches', 'matches');
+        $matches = queryAPI('/team/frc'.$team.'/event/'.$nEv["key"].'/matches',$tba_api3_key);
+        $tmatch = NULL;
         foreach($matches as $match) {
           // I'm not sure if this will work. I can't check the api right now to see what "actual_time" is set to on a planned match that hasn't occured yet
-          if($match["actual_time"] == "0" ) {
-            if(isset($tmatch[0])) {
-              if($match["match_number"] < $tmatch[0]){
-                $tmatch[0] = $match["match_number"];
-                $tmatch[1] = $match;
+          writeToLog("Match ".$match["match_number"]." started at ".$match["actual_time"], 'matches');
+          if(is_null($match["actual_time"]) && empty($match["winning_alliance"])) {
+            if(isset($tmatch) && !is_null($tmatch)) {
+              if($match["match_number"] < $tmatch["match_number"]){
+                $tmatch = $match;
               }
             } else {
-              $tmatch[0] = $match["match_number"];
-              $tmatch[1] = $match;
+              $tmatch = $match;
             }
           }
         }
-        if(isset($tmatch[1])) {
+        writeToLog("Match: ".json_encode($tmatch), 'matches');
+        if(!is_null($tmatch) && isset($tmatch)) {
           $alliances = array();
           $index = 0;
-          foreach($tmatch[1]["alliances"]["blue"]["team_keys"] as $key) {
+          $reqteam = $team;
+          foreach($tmatch["alliances"]["blue"]["team_keys"] as $key) {
             $team = str_replace("frc","",$key);
             $alliances[$index] = array("text" => '<https://momentum4999.com/scouting/info.php?team='.$team.'|Team '.$team.'>');
-            if($team == "4999") {
+            if($team == $requteam) {
               $alliances[$index]["color"] = '#06ceff';
             } else {
               $alliances[$index]["color"] = '#148be5';
@@ -85,10 +94,10 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
             $index++;
           }
           // RED
-          foreach($tmatch[1]["alliances"]["red"]["team_keys"] as $key) {
+          foreach($tmatch["alliances"]["red"]["team_keys"] as $key) {
             $team = str_replace("frc","",$key);
             $alliances[$index] = array("text" => '<https://momentum4999.com/scouting/info.php?team='.$team.'|Team '.$team.'>');
-            if($team == "4999") {
+            if($team == $reqteam) {
               $alliances[$index]["color"] = '#ff2200';
             } else {
               $alliances[$index]["color"] = '#d60c0c';
@@ -97,7 +106,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
           }
             postToSlack(json_encode(array(
               "response_type"=>"in_channel",
-              "text"=>"The next match, number ".$tmatch[1]["match_number"].", will occur at ".date("g:i",$tmatch[1]["predicted_time"].'\n Alliances: '),
+              "text"=>"At ".$nEv["name"].", team ".$reqteam."'s next match, number ".$tmatch["match_number"].", will occur at ".date("g:i A",$tmatch["predicted_time"].'\n Alliances: '),
               "attachments"=> $alliances
             ), JSON_UNESCAPED_SLASHES),$url);
         } else {
@@ -114,7 +123,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
           "attachments" => array(
               array("text" => "/tba score [team number]\nPrints a team's standing in the most recent match that team has competed in. If team number is not supplied, defaults to 4999."),
               array("text" => "/tba team [team number]\nReturns a link to the scouting app for the given team"),
-              array("text" => "/tba match\nReturns info about the next upcoming match"),
+              array("text" => "/tba match [team number]\nReturns info about the next upcoming match. If no team is specified, defaults to 4999"),
               array("text" => "/tba help\nDisplays this help message")
           )
         ), JSON_UNESCAPED_SLASHES), $url);

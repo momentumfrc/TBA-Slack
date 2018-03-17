@@ -45,38 +45,38 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
 			$match = $md["match"];
 			if(in_array("frc4999",$match["alliances"]["blue"]["teams"])) {
 				if($match["alliances"]["blue"]["score"] > $match["alliances"]["red"]["score"]) {
-					$message = '{"text": "Congratulations Momentum!\n Match '.$match["match_number"].' won *'.$match["alliances"]["blue"]["score"].'*-'.$match["alliances"]["red"]["score"].'"}';
+					$message = '{"text": "Congratulations Momentum!\nMatch '.$match["match_number"].' won *'.$match["alliances"]["blue"]["score"].'*-'.$match["alliances"]["red"]["score"].'"}';
 				} elseif($match["alliances"]["blue"]["score"] < $match["alliances"]["red"]["score"]) {
-					$message = '{"text": "Better luck next time!\n Match '.$match["match_number"].' lost '.$match["alliances"]["blue"]["score"].'-*'.$match["alliances"]["red"]["score"].'*"}';
+					$message = '{"text": "Better luck next time!\nMatch '.$match["match_number"].' lost '.$match["alliances"]["blue"]["score"].'-*'.$match["alliances"]["red"]["score"].'*"}';
 				} elseif($match["alliances"]["blue"]["score"] == $match["alliances"]["red"]["score"]) {
-					$message = '{"text": "Good job Momentum!\n Match '.$match["match_number"].' tied '.$match["alliances"]["blue"]["score"].'-'.$match["alliances"]["red"]["score"].'"}';
+					$message = '{"text": "Good job Momentum!\nMatch '.$match["match_number"].' tied '.$match["alliances"]["blue"]["score"].'-'.$match["alliances"]["red"]["score"].'"}';
 				}
 			} elseif(in_array("frc4999",$match["alliances"]["red"]["teams"])) {
 				if($match["alliances"]["red"]["score"] > $match["alliances"]["blue"]["score"]) {
-					$message = '{"text": "Congratulations Momentum!\n Match '.$match["match_number"].' won *'.$match["alliances"]["red"]["score"].'*-'.$match["alliances"]["blue"]["score"].'"}';
+					$message = '{"text": "Congratulations Momentum!\nMatch '.$match["match_number"].' won *'.$match["alliances"]["red"]["score"].'*-'.$match["alliances"]["blue"]["score"].'"}';
 				} elseif($match["alliances"]["red"]["score"] < $match["alliances"]["blue"]["score"]) {
-					$message = '{"text": "Better luck next time!\n Match '.$match["match_number"].' lost '.$match["alliances"]["red"]["score"].'-*'.$match["alliances"]["blue"]["score"].'*"}';
+					$message = '{"text": "Better luck next time!\nMatch '.$match["match_number"].' lost '.$match["alliances"]["red"]["score"].'-*'.$match["alliances"]["blue"]["score"].'*"}';
 				} elseif($match["alliances"]["red"]["score"] == $match["alliances"]["blue"]["score"]) {
-					$message = '{"text": "Good job Momentum!\n Match '.$match["match_number"].' tied '.$match["alliances"]["red"]["score"].'-'.$match["alliances"]["blue"]["score"].'"}';
+					$message = '{"text": "Good job Momentum!\nMatch '.$match["match_number"].' tied '.$match["alliances"]["red"]["score"].'-'.$match["alliances"]["blue"]["score"].'"}';
 				}
 			} elseif(in_array("frc7042",$match["alliances"]["blue"]["teams"])) {
 				if($match["alliances"]["blue"]["score"] > $match["alliances"]["red"]["score"]) {
-					$message = '{"text": "Congratulations Rabbotics!\n Match '.$match["match_number"].' won *'.$match["alliances"]["blue"]["score"].'*-'.$match["alliances"]["red"]["score"].'"}';
+					$message = '{"text": "Congratulations Rabbotics!\nMatch '.$match["match_number"].' won *'.$match["alliances"]["blue"]["score"].'*-'.$match["alliances"]["red"]["score"].'"}';
 				} elseif($match["alliances"]["blue"]["score"] < $match["alliances"]["red"]["score"]) {
-					$message = '{"text": "Better luck next time!\n Match '.$match["match_number"].' lost '.$match["alliances"]["blue"]["score"].'-*'.$match["alliances"]["red"]["score"].'*"}';
+					$message = '{"text": "Better luck next time!\nMatch '.$match["match_number"].' lost '.$match["alliances"]["blue"]["score"].'-*'.$match["alliances"]["red"]["score"].'*"}';
 				} elseif($match["alliances"]["blue"]["score"] == $match["alliances"]["red"]["score"]) {
-					$message = '{"text": "Good job Rabbotics!\n Match '.$match["match_number"].' tied '.$match["alliances"]["blue"]["score"].'-'.$match["alliances"]["red"]["score"].'"}';
+					$message = '{"text": "Good job Rabbotics!\nMatch '.$match["match_number"].' tied '.$match["alliances"]["blue"]["score"].'-'.$match["alliances"]["red"]["score"].'"}';
 				}
 			} elseif(in_array("frc7042",$match["alliances"]["red"]["teams"])) {
 				if($match["alliances"]["red"]["score"] > $match["alliances"]["blue"]["score"]) {
-					$message = '{"text": "Congratulations Rabbotics!\n Match '.$match["match_number"].' won *'.$match["alliances"]["red"]["score"].'*-'.$match["alliances"]["blue"]["score"].'"}';
+					$message = '{"text": "Congratulations Rabbotics!\nMatch '.$match["match_number"].' won *'.$match["alliances"]["red"]["score"].'*-'.$match["alliances"]["blue"]["score"].'"}';
 				} elseif($match["alliances"]["red"]["score"] < $match["alliances"]["blue"]["score"]) {
-					$message = '{"text": "Better luck next time!\n Match '.$match["match_number"].' lost '.$match["alliances"]["red"]["score"].'-*'.$match["alliances"]["blue"]["score"].'*"}';
+					$message = '{"text": "Better luck next time!\nMatch '.$match["match_number"].' lost '.$match["alliances"]["red"]["score"].'-*'.$match["alliances"]["blue"]["score"].'*"}';
 				} elseif($match["alliances"]["red"]["score"] == $match["alliances"]["blue"]["score"]) {
-					$message = '{"text": "Good job Rabbotics!\n Match '.$match["match_number"].' tied '.$match["alliances"]["red"]["score"].'-'.$match["alliances"]["blue"]["score"].'"}';
+					$message = '{"text": "Good job Rabbotics!\nMatch '.$match["match_number"].' tied '.$match["alliances"]["red"]["score"].'-'.$match["alliances"]["blue"]["score"].'"}';
 				}
 			} else {
-				$message = $message = '{"text": "Match Complete!\n Match '.$match["match_number"].' finished '.$match["alliances"]["blue"]["score"].'-'.$match["alliances"]["red"]["score"].'"}';
+				$message = $message = '{"text": "Match Complete!\nMatch '.$match["match_number"].' finished '.$match["alliances"]["blue"]["score"].'-'.$match["alliances"]["red"]["score"].'"}';
 			}
 			$result = postToSlack($message, $slack_webhook_url);
 			break;

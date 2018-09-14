@@ -21,8 +21,27 @@ function getCurrentEvent($team) {
   }
   return $nEv;
 }
+
+function verifySlack() {
+  global $slack_signing_secret;
+  $headers = getallheaders();
+  if(! (isset($headers['X-Slack-Request-Timestamp']) && isset($headers['X-Slack-Signature']))) {
+    die("Invalid headers");
+  }
+  if(abs(time() - $headers['X-Slack-Request-Timestamp']) > 60 * 5) {
+    die("Request too old");
+  }
+  $signature = 'v0:' . $headers['X-Slack-Request-Timestamp'] . ":" . file_get_contents('php://input');
+  $signature_hashed = 'v0=' . hash_hmac('sha256', $signature, $slack_signing_secret);
+  return hash_equals($signature_hashed, $headers['X-Slack-Signature']);
+}
+
+function getDateString($timestamp) {
+  return "<!date^".$timestamp."^{time}|".date('g:i A', $timestamp).">";
+}
+
 if($_SERVER["REQUEST_METHOD"] == "POST") {
-  if($_POST["token"] == $slack_token) {
+  if(verifySlack()) {
     $url = $_POST["response_url"];
     $opts = str_getcsv($_POST["text"], ' ');
     stopTimeout();
@@ -50,7 +69,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
         if(!array_key_exists(1,$opts)) {
           postToSlack('{"response_type" : "ephemeral", "text" : "Usage: ", "attachments":[{"text":"/tba team [team number]\nReturns a link to the scouting app for the given team"}]}', $url);
         } else {
-          postToSlack('{"response_type" : "ephemeral", "attachments":[{"text" : "<https://momentum4999.com/scouting/info.php?team='.urlencode($opts[1]).'|Team '.$opts[1].'>"}]}', $url);
+          postToSlack('{"response_type" : "ephemeral", "attachments":[{"text" : "<'.$scoutingAppInfoBase.urlencode($opts[1]).'|Team '.$opts[1].'>"}]}', $url);
         }
         break;
       case "match":
@@ -85,7 +104,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
           $reqteam = $team;
           foreach($tmatch["alliances"]["blue"]["team_keys"] as $key) {
             $team = str_replace("frc","",$key);
-            $alliances[$index] = array("text" => '<https://momentum4999.com/scouting/info.php?team='.$team.'|Team '.$team.'>');
+            $alliances[$index] = array("text" => '<'.$scoutingAppInfoBase.$team.'|Team '.$team.'>');
             if($team == $requteam) {
               $alliances[$index]["color"] = '#06ceff';
             } else {
@@ -96,7 +115,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
           // RED
           foreach($tmatch["alliances"]["red"]["team_keys"] as $key) {
             $team = str_replace("frc","",$key);
-            $alliances[$index] = array("text" => '<https://momentum4999.com/scouting/info.php?team='.$team.'|Team '.$team.'>');
+            $alliances[$index] = array("text" => '<'.$scoutingAppInfoBase.$team.'|Team '.$team.'>');
             if($team == $reqteam) {
               $alliances[$index]["color"] = '#ff2200';
             } else {
@@ -106,7 +125,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
           }
             postToSlack(json_encode(array(
               "response_type"=>"in_channel",
-              "text"=>"At ".$nEv["name"].", team ".$reqteam."'s next match, number ".$tmatch["match_number"].", will occur at ".date("g:i A",$tmatch["predicted_time"].'\n Alliances: '),
+              "text"=>"At ".$nEv["name"].", team ".$reqteam."'s next match, number ".$tmatch["match_number"].", will occur at ".getDateString($tmatch["predicted_time"]).'\n Alliances: ',
               "attachments"=> $alliances
             ), JSON_UNESCAPED_SLASHES),$url);
         } else {
@@ -133,6 +152,8 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
         break;
     }
 
+  } else {
+    echo("Slack verification failed");
   }
 } else {
   echo("You're not supposed to be here.");

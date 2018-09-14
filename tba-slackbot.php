@@ -18,7 +18,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
       // BLUE
       foreach($match["alliances"]["blue"]["team_keys"] as $key) {
         $team = str_replace("frc","",$key);
-        $data_string = $data_string . '{ "text": "<https://momentum4999.com/scouting/info.php?team='.$team.'|Team '.$team.'>"';
+        $data_string = $data_string . '{ "text": "<'.$scoutingAppInfoBase.$team.'|Team '.$team.'>"';
         if($team == "4999" || $team == "7042") {
           $data_string = $data_string . ', "color" : "#06ceff"';
         } else {
@@ -29,7 +29,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
       // RED
       foreach($match["alliances"]["red"]["team_keys"] as $key) {
         $team = str_replace("frc","",$key);
-        $data_string = $data_string . '{ "text": "<https://momentum4999.com/scouting/info.php?team='.$team.'|Team '.$team.'>"';
+        $data_string = $data_string . '{ "text": "<'.$scoutingAppInfoBase.$team.'|Team '.$team.'>"';
         if($team == "4999" || $team == "7042") {
           $data_string = $data_string . ', "color" : "#ff2200"';
         } else {

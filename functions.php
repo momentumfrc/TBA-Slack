@@ -2,6 +2,8 @@
 // Stored in a separate file so that it's not publically visible in the github
 require 'auths.php';
 
+$scoutingAppInfoBase = "https://momentum4999.com/scouting/info.php?team=";
+
 function writeToLog($string, $log) {
 	file_put_contents($log.".log", date("d-m-Y_h:i:s")."-- ".$string."\r\n", FILE_APPEND);
 }

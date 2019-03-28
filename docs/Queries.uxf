@@ -4,8 +4,8 @@
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>620</x>
-      <y>280</y>
+      <x>670</x>
+      <y>260</y>
       <w>80</w>
       <h>60</h>
     </coordinates>
@@ -18,8 +18,8 @@ Query
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>290</x>
-      <y>430</y>
+      <x>340</x>
+      <y>410</y>
       <w>240</w>
       <h>60</h>
     </coordinates>
@@ -33,8 +33,8 @@ _+construct(String query): TBAQuery_
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>410</x>
-      <y>330</y>
+      <x>460</x>
+      <y>310</y>
       <w>270</w>
       <h>120</h>
     </coordinates>
@@ -44,8 +44,8 @@ _+construct(String query): TBAQuery_
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>750</x>
-      <y>430</y>
+      <x>800</x>
+      <y>410</y>
       <w>240</w>
       <h>60</h>
     </coordinates>
@@ -58,8 +58,8 @@ _+construct(String query): SlackQuery_</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>650</x>
-      <y>330</y>
+      <x>700</x>
+      <y>310</y>
       <w>240</w>
       <h>120</h>
     </coordinates>
@@ -69,20 +69,21 @@ _+construct(String query): SlackQuery_</panel_attributes>
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>190</x>
-      <y>580</y>
+      <x>240</x>
+      <y>560</y>
       <w>130</w>
-      <h>30</h>
+      <h>50</h>
     </coordinates>
     <panel_attributes>VerificationQuery
-</panel_attributes>
+--
++handle()</panel_attributes>
     <additional_attributes/>
   </element>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>240</x>
-      <y>480</y>
+      <x>290</x>
+      <y>460</y>
       <w>200</w>
       <h>120</h>
     </coordinates>
@@ -92,30 +93,34 @@ _+construct(String query): SlackQuery_</panel_attributes>
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>340</x>
-      <y>580</y>
+      <x>390</x>
+      <y>560</y>
       <w>150</w>
-      <h>30</h>
+      <h>50</h>
     </coordinates>
-    <panel_attributes>UpcomingMatchQuery</panel_attributes>
+    <panel_attributes>UpcomingMatchQuery
+--
++handle()</panel_attributes>
     <additional_attributes/>
   </element>
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>500</x>
-      <y>580</y>
+      <x>550</x>
+      <y>560</y>
       <w>120</w>
-      <h>30</h>
+      <h>50</h>
     </coordinates>
-    <panel_attributes>MatchScoreQuery</panel_attributes>
+    <panel_attributes>MatchScoreQuery
+--
++handle()</panel_attributes>
     <additional_attributes/>
   </element>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>410</x>
-      <y>480</y>
+      <x>460</x>
+      <y>460</y>
       <w>30</w>
       <h>120</h>
     </coordinates>
@@ -125,8 +130,8 @@ _+construct(String query): SlackQuery_</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>410</x>
-      <y>480</y>
+      <x>460</x>
+      <y>460</y>
       <w>170</w>
       <h>120</h>
     </coordinates>
@@ -136,41 +141,47 @@ _+construct(String query): SlackQuery_</panel_attributes>
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>680</x>
-      <y>580</y>
+      <x>730</x>
+      <y>560</y>
       <w>120</w>
-      <h>30</h>
+      <h>50</h>
     </coordinates>
-    <panel_attributes>TeamScoreQuery</panel_attributes>
+    <panel_attributes>TeamScoreQuery
+--
++handle()</panel_attributes>
     <additional_attributes/>
   </element>
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>810</x>
-      <y>580</y>
+      <x>860</x>
+      <y>560</y>
       <w>110</w>
-      <h>30</h>
+      <h>50</h>
     </coordinates>
-    <panel_attributes>TeamInfoQuery</panel_attributes>
+    <panel_attributes>TeamInfoQuery
+--
++handle()</panel_attributes>
     <additional_attributes/>
   </element>
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>940</x>
-      <y>580</y>
+      <x>990</x>
+      <y>560</y>
       <w>120</w>
-      <h>30</h>
+      <h>50</h>
     </coordinates>
-    <panel_attributes>NextMatchQuery</panel_attributes>
+    <panel_attributes>NextMatchQuery
+--
++handle()</panel_attributes>
     <additional_attributes/>
   </element>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>730</x>
-      <y>480</y>
+      <x>780</x>
+      <y>460</y>
       <w>150</w>
       <h>120</h>
     </coordinates>
@@ -180,8 +191,8 @@ _+construct(String query): SlackQuery_</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>850</x>
-      <y>480</y>
+      <x>900</x>
+      <y>460</y>
       <w>30</w>
       <h>120</h>
     </coordinates>
@@ -191,8 +202,8 @@ _+construct(String query): SlackQuery_</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>850</x>
-      <y>480</y>
+      <x>900</x>
+      <y>460</y>
       <w>170</w>
       <h>120</h>
     </coordinates>

@@ -25,7 +25,7 @@ abstract class API {
     }
 }
 
-class TBAAPI {
+class TBAAPI extends API {
     private $baseURL = "www.thebluealliance.com/api/v3";
     private function getHeader() {
         return array( 'X-TBA-Auth-Key: '.Settings::$tbaKey);
@@ -82,10 +82,8 @@ class TBAAPI {
     function getMatchInfo($matchKey) {
         $url = $this->baseURL.'/match/'.$matchKey;
         $matchinfo = json_decode(getURL($url, array(), $this->getHeader()), true);
-        return new MatchInfo($matchinfo);
+        return new Match($matchinfo);
     }
-
-
 
 }
 
@@ -180,7 +178,7 @@ class Webcast {
     }
 }
 
-class MatchInfo {
+class Match {
     function __construct($jsoninfo) {
         $this->key              = $jsoninfo["key"];
         $this->comp_level       = $jsoninfo["comp_level"];
@@ -206,5 +204,233 @@ class MatchAlliance {
         $this->dq_team_keys         = $jsoninfo["dq_team_keys"];
     }
 }
+
+class SlackAPI extends API {
+    function postToURL($url, $jsondata) {
+        return postURL($url, $jsondata, array('Content-Type: application/json'));
+    }
+
+    function postToWebhooks($message) {
+        foreach(Settings::$webhooks as $webhook) {
+            postToSlack($webhook, $message->getJSON());
+        }
+    }
+
+}
+
+interface Message {
+    function getJSON();
+}
+
+class SimpleMessage implements Message {
+    private $message;
+    function __construct($message) {
+        $this->message = $message;
+    }
+    function getJSON() {
+        return json_encode(array(
+            "response_type"=>"in_channel",
+            "text"=>$this->message
+        ), JSON_UNESCAPED_SLASHES);
+    }
+}
+
+class EphemeralMessage implements Message {
+    private $message;
+    function __construct($message) {
+        $this->message = $message;
+    }
+    function getJSON() {
+        return json_encode(array(
+            "response_type"=>"ephemeral",
+            "text"=>$this->message
+        ), JSON_UNESCAPED_SLASHES);
+    }
+}
+
+class MatchStartMessage implements Message {
+    private $redAlliance;
+    private $blueAlliance;
+    private $match;
+    private $tba_base_url = "https://www.thebluealliance.com/event/";
+    function __construct($redAlliance, $blueAlliance, $match) {
+        $this->redAlliance = $redAlliance;
+        $this->blueAlliance = $blueAlliance;
+        $this->match = $match;
+    }
+    function getJSON() {
+        $match_text = "";
+        switch($this->match->comp_level) {
+            case "qm":
+                $match_text = "Quals ".$this->match->match_number." coming up!";
+                break;
+            case "qf":
+                $match_text = "Quarters ".$this->match->set_number." match ".$this->match->match_number." coming up!";
+                break;
+            case "sf":
+                $match_text = "Semis ".$this->match->set_number." match ".$this->match->match_number." coming up!";
+                break;
+            case "f":
+                $match_text = "Finals ".$this->match->match_number." coming up!";
+                break;
+            default:
+                $match_text = "Match coming up!";
+                break;
+        }
+        $blue_alliance_teams = array();
+        foreach($this->blueAlliance as $team) {
+            if(array_key_exists($team, Settings::$subscribedTeams)) {
+                $blue_alliance_teams[] = "*".$team->team_number." - ".$team->nickname."*";
+            } else {
+                $blue_alliance_teams[] = $team->team_number." - ".$team->nickname;
+            }
+            
+        }
+        $blue_alliance_text = implode("\n", $blue_alliance_teams);
+
+        $red_alliance_teams = array();
+        foreach($this->redAlliance as $team) {
+            if(array_key_exists($team, Settings::$subscribedTeams)) {
+                $red_alliance_teams[] = "*".$team->team_number." - ".$team->nickname."*";
+            } else {
+                $red_alliance_teams[] = $team->team_number." - ".$team->nickname;
+            }
+        }
+        $red_alliance_text = implode("\n", $red_alliance_teams);
+        $match_url = $this->tba_base_url . $this->match->key;
+         
+        return json_encode(array(
+            array(
+                "type"=>"section",
+                "text"=>array(
+                    "type"=>"mrkdwn",
+                    "text"=>$match_text
+                )
+            ),
+            array("type"=>"divider"),
+            array(
+                "type"=>"section",
+                "text"=>array(
+                    "type"=>"mrkdwn",
+                    "text"=>$blue_alliance_text
+                ),
+                "accessory"=>array(
+                    "type"=>"image",
+                    "image_url"=>Settings::$imageURL."/blue_alliance.png",
+                    "alt_text"=>"The Red Alliance"
+                )
+            ),
+            array("type"=>"divider"),
+            array(
+                "type"=>"section",
+                "text"=>array(
+                    "type"=>"mrkdwn",
+                    "text"=>$red_alliance_text
+                ),
+                "accessory"=>array(
+                    "type"=>"image",
+                    "image_url"=>Settings::$imageURL."/red_alliance.png",
+                    "alt_text"=>"The Blue Alliance"
+                )
+            ),
+            array("type"=>"divider"),
+            array(
+                "type"=>"context",
+                "elements"=>array(
+                    array(
+                        "type"=>"mrkdwn",
+                        "text"=>$match_url
+                    )
+                )
+            )
+        ), JSON_UNESCAPED_SLASHES);
+    }
+}
+
+class MatchFinishedMessage implements Message {
+    private $redAlliance;
+    private $blueAlliance;
+    private $match;
+    function __construct($redAlliance, $blueAlliance, $match) {
+        $this->redAlliance = $redAlliance;
+        $this->blueAlliance = $blueAlliance;
+        $this->match = $match;
+    }
+
+    function getJSON() {
+        $finished_text = "Placeholder text, should not be shown";
+        $ouralliance = null;
+        $ournickname = null;
+        foreach(Settings::$subscribedTeams as $team => $nickname) {
+            foreach($this->redAlliance as $alliance_team) {
+                if($team == $alliance_team->team_number) {
+                    $ouralliance = "red";
+                    $ournickname = $nickname;
+                    break 2;
+                }
+            }
+            foreach($this->blueAlliance as $alliance_team) {
+                if($team == $alliance_team->team_number) {
+                    $ouralliance = "blue";
+                    $ournickname = $nickname;
+                }
+            }
+        }
+        $winningalliance = "none";
+        $scoretext = $this->match->blue_alliance->score.'-'.$this->match->red_alliance->score;
+        if($this->match->red_alliance->score > $this->match->blue_allliance->score) {
+            $winningalliance = "red";
+            $scoretext = $this->match->blue_alliance->score.'-*'.$this->match->red_alliance->score.'*';
+        } elseif ($this->match->red_alliance->score < $this->match->blue_alliance->score) {
+            $winningalliance = "blue";
+            $scoretext = '*'.$this->match->blue_alliance->score.'*-'.$this->match->red_alliance->score;
+        } elseif ($this->match->red_alliance->score == $this->match->blue_alliannce->score) {
+            $winningalliance = "tie";
+        }
+
+        $match_text = "";
+        switch($this->match->comp_level) {
+            case "qm":
+                $match_text = "Quals ".$this->match->match_number;
+                break;
+            case "qf":
+                $match_text = "Quarters ".$this->match->set_number." match ".$this->match->match_number;
+                break;
+            case "sf":
+                $match_text = "Semis ".$this->match->set_number." match ".$this->match->match_number;
+                break;
+            case "f":
+                $match_text = "Finals ".$this->match->match_number;
+                break;
+            default:
+                $match_text = "Match";
+                break;
+        }
+
+        if($ouralliance == null || $ournickname == null || $winningalliance === "none") {
+            $finished_text = "Match complete!\n".$match_text.' finished '.$scoretext;
+        } elseif($winningalliance === "tie") {
+            $finished_text = "Match complete!\n".$match_text.' tied '.$scoretext;
+        } elseif($ouralliance == $winningalliance) {
+            $finished_text = 'Congratulations '.$ournickname."!\n".$match_text.' won '.$scoretext;
+        } elseif($ouralliance == ($winningalliance === "red"? "blue" : "red") ) {
+            $finished_text = 'Better luck next time, '.$ournickname."\n".$match_text.' lost '.$scoretext;
+        }
+        return json_encode(array(
+            array(
+                "type"=>"section",
+                "text"=>array(
+                    "type"=>"mrkdwn",
+                    "text"=>$finished_text
+                )
+            )
+        ), JSON_UNESCAPED_SLASHES);
+    }
+
+}
+
+
+
+
 
 ?>

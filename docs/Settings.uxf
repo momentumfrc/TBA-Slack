@@ -13,7 +13,8 @@
 --
 +subscribedTeams: Array&lt;SubscribedTeam&gt;
 +webhooks: Array&lt;String&gt;
-+slack_signing_secret: String</panel_attributes>
++slack_signing_secret: String
++tba-key: String</panel_attributes>
     <additional_attributes/>
   </element>
   <element>

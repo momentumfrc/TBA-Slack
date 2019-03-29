@@ -37,19 +37,19 @@ class TBAAPI extends API {
 
     function getTeamSimple($teamKey) {
         $url = $this->baseURL.'/team/'.$teamKey.'/simple';
-        $teaminfo = json_decode(getURL($url, array(), $this->getHeader()), true);
+        $teaminfo = json_decode($this->getURL($url, array(), $this->getHeader()), true);
         return new TeamSimple($teaminfo);
     }
 
     function getTeam($teamKey) {
         $url = $this->baseURL.'/team/'.$teamKey;
-        $teaminfo = json_decode(getURL($url, array(), $this->getHeader()), true);
+        $teaminfo = json_decode($this->getURL($url, array(), $this->getHeader()), true);
         return new Team($teaminfo);
     }
 
     function getTeamEventsSimple($teamKey) {
         $url = $this->baseURL.'/team/'.$teamKey.'/events/simple';
-        $eventinfos = json_decode(getURL($url, array(), $this->getHeader()), true);
+        $eventinfos = json_decode($this->getURL($url, array(), $this->getHeader()), true);
         $out = array();
         foreach($eventinfos as $eventinfo) {
             $out[] = new EventSimple($eventinfo);
@@ -69,19 +69,19 @@ class TBAAPI extends API {
         }
 
         $url = $this->baseURL.'/event/'.$mostRecentEvent->key;
-        $eventinfo = json_decode(getURL($url, array(), $this->getHeader()), true);
+        $eventinfo = json_decode($this->getURL($url, array(), $this->getHeader()), true);
         return new Event($eventinfo);
     }
 
     function getTeamEventStatus($teamKey, $eventKey) {
         $url = $this->baseURL.'/team/'.$teamKey.'/event/'.$eventKey.'/status';
-        $statusinfo = json_decode(getURL($url, array(), $this->getHeader()), true);
+        $statusinfo = json_decode($this->getURL($url, array(), $this->getHeader()), true);
         return new EventStatus($status);
     }
 
     function getMatchInfo($matchKey) {
         $url = $this->baseURL.'/match/'.$matchKey;
-        $matchinfo = json_decode(getURL($url, array(), $this->getHeader()), true);
+        $matchinfo = json_decode($this->getURL($url, array(), $this->getHeader()), true);
         return new Match($matchinfo);
     }
 
@@ -207,12 +207,12 @@ class MatchAlliance {
 
 class SlackAPI extends API {
     function postToURL($url, $jsondata) {
-        return postURL($url, $jsondata, array('Content-Type: application/json'));
+        return $this->postURL($url, $jsondata, array('Content-Type: application/json'));
     }
 
     function postToWebhooks($message) {
         foreach(Settings::$webhooks as $webhook) {
-            postToSlack($webhook, $message->getJSON());
+            $this->postToURL($webhook, $message->getJSON());
         }
     }
 

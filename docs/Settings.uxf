@@ -4,42 +4,18 @@
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>550</x>
+      <x>230</x>
       <y>220</y>
-      <w>300</w>
-      <h>100</h>
+      <w>360</w>
+      <h>110</h>
     </coordinates>
     <panel_attributes>Settings
 --
-+subscribedTeams: Array&lt;SubscribedTeam&gt;
-+webhooks: Array&lt;String&gt;
-+slack_signing_secret: String
-+tba-key: String</panel_attributes>
+_+subscribedTeams: Map&lt;String team, String nickname&gt;_
+_+webhooks: Array&lt;String&gt;_
+_+slack_signing_secret: String_
+_+tbaKey: String_
+_+imageURL: String_</panel_attributes>
     <additional_attributes/>
-  </element>
-  <element>
-    <id>UMLClass</id>
-    <coordinates>
-      <x>630</x>
-      <y>420</y>
-      <w>140</w>
-      <h>70</h>
-    </coordinates>
-    <panel_attributes>SubscribedTeam
---
-+teamKey: String
-+shortName: String</panel_attributes>
-    <additional_attributes/>
-  </element>
-  <element>
-    <id>Relation</id>
-    <coordinates>
-      <x>690</x>
-      <y>310</y>
-      <w>30</w>
-      <h>130</h>
-    </coordinates>
-    <panel_attributes>lt=&lt;-</panel_attributes>
-    <additional_attributes>10.0;10.0;10.0;110.0</additional_attributes>
   </element>
 </diagram>

@@ -4,8 +4,8 @@
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>670</x>
-      <y>260</y>
+      <x>430</x>
+      <y>210</y>
       <w>80</w>
       <h>60</h>
     </coordinates>
@@ -18,23 +18,23 @@ Query
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>340</x>
-      <y>410</y>
+      <x>100</x>
+      <y>360</y>
       <w>240</w>
       <h>60</h>
     </coordinates>
     <panel_attributes>&lt;&lt;abstract&gt;&gt;
 TBAQuery
 --
-_+construct(String query): TBAQuery_
+_+construct(Array query): TBAQuery_
 </panel_attributes>
     <additional_attributes/>
   </element>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>460</x>
-      <y>310</y>
+      <x>220</x>
+      <y>260</y>
       <w>270</w>
       <h>120</h>
     </coordinates>
@@ -44,22 +44,22 @@ _+construct(String query): TBAQuery_
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>800</x>
-      <y>410</y>
+      <x>560</x>
+      <y>360</y>
       <w>240</w>
       <h>60</h>
     </coordinates>
     <panel_attributes>&lt;&lt;abstract&gt;&gt;
 SlackQuery
 --
-_+construct(String query): SlackQuery_</panel_attributes>
+_+construct(Array query): SlackQuery_</panel_attributes>
     <additional_attributes/>
   </element>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>700</x>
-      <y>310</y>
+      <x>460</x>
+      <y>260</y>
       <w>240</w>
       <h>120</h>
     </coordinates>
@@ -69,8 +69,8 @@ _+construct(String query): SlackQuery_</panel_attributes>
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>240</x>
-      <y>560</y>
+      <x>0</x>
+      <y>510</y>
       <w>130</w>
       <h>50</h>
     </coordinates>
@@ -82,8 +82,8 @@ _+construct(String query): SlackQuery_</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>290</x>
-      <y>460</y>
+      <x>50</x>
+      <y>410</y>
       <w>200</w>
       <h>120</h>
     </coordinates>
@@ -93,8 +93,8 @@ _+construct(String query): SlackQuery_</panel_attributes>
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>390</x>
-      <y>560</y>
+      <x>150</x>
+      <y>510</y>
       <w>150</w>
       <h>50</h>
     </coordinates>
@@ -106,8 +106,8 @@ _+construct(String query): SlackQuery_</panel_attributes>
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>550</x>
-      <y>560</y>
+      <x>310</x>
+      <y>510</y>
       <w>120</w>
       <h>50</h>
     </coordinates>
@@ -119,8 +119,8 @@ _+construct(String query): SlackQuery_</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>460</x>
-      <y>460</y>
+      <x>220</x>
+      <y>410</y>
       <w>30</w>
       <h>120</h>
     </coordinates>
@@ -130,8 +130,8 @@ _+construct(String query): SlackQuery_</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>460</x>
-      <y>460</y>
+      <x>220</x>
+      <y>410</y>
       <w>170</w>
       <h>120</h>
     </coordinates>
@@ -141,8 +141,8 @@ _+construct(String query): SlackQuery_</panel_attributes>
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>730</x>
-      <y>560</y>
+      <x>490</x>
+      <y>510</y>
       <w>120</w>
       <h>50</h>
     </coordinates>
@@ -154,8 +154,8 @@ _+construct(String query): SlackQuery_</panel_attributes>
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>860</x>
-      <y>560</y>
+      <x>620</x>
+      <y>510</y>
       <w>110</w>
       <h>50</h>
     </coordinates>
@@ -167,8 +167,8 @@ _+construct(String query): SlackQuery_</panel_attributes>
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>990</x>
-      <y>560</y>
+      <x>750</x>
+      <y>510</y>
       <w>120</w>
       <h>50</h>
     </coordinates>
@@ -180,8 +180,8 @@ _+construct(String query): SlackQuery_</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>780</x>
-      <y>460</y>
+      <x>540</x>
+      <y>410</y>
       <w>150</w>
       <h>120</h>
     </coordinates>
@@ -191,8 +191,8 @@ _+construct(String query): SlackQuery_</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>900</x>
-      <y>460</y>
+      <x>660</x>
+      <y>410</y>
       <w>30</w>
       <h>120</h>
     </coordinates>
@@ -202,12 +202,60 @@ _+construct(String query): SlackQuery_</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>900</x>
-      <y>460</y>
+      <x>660</x>
+      <y>410</y>
       <w>170</w>
       <h>120</h>
     </coordinates>
     <panel_attributes>lt=&lt;&lt;-</panel_attributes>
     <additional_attributes>10.0;10.0;10.0;60.0;150.0;60.0;150.0;100.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>890</x>
+      <y>510</y>
+      <w>80</w>
+      <h>50</h>
+    </coordinates>
+    <panel_attributes>HelpQuery
+--
++handle()</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>990</x>
+      <y>510</y>
+      <w>160</w>
+      <h>50</h>
+    </coordinates>
+    <panel_attributes>InvalidCommandQuery
+--
++handle()</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>660</x>
+      <y>410</y>
+      <w>280</w>
+      <h>120</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;60.0;260.0;60.0;260.0;100.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>660</x>
+      <y>410</y>
+      <w>440</w>
+      <h>120</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;60.0;420.0;60.0;420.0;100.0</additional_attributes>
   </element>
 </diagram>

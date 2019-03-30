@@ -51,7 +51,9 @@ class UpcomingMatchQuery extends TBAQuery {
             $blue_alliance[] = $tba->getTeamSimple($team_key);
         }
 
-        $message = MessageFactory::getMatchMessage("coming up!",$red_alliance, $blue_alliance, $match);
+        $event = $tba->getEventInfo($match->event_key);
+
+        $message = MessageFactory::getMatchMessage("coming up!",$red_alliance, $blue_alliance, $match, $event->webcasts);
         $slack->postToWebhooks($message);
     }
 }
@@ -199,7 +201,7 @@ class NextMatchQuery extends SlackQuery {
                     $blue_alliance[] = $tba->getTeamSimple($team_key);
                 }
                 $postfix = "at ".$event->name." is up next for <".$teamurl."|".$teaminfo->team_number."> - ".$teaminfo->nickname.", and will occur at ".MessageFactory::getDateString($match->predicted_time);
-                $message = MessageFactory::getMatchMessage($postfix, $red_alliance, $blue_alliance, $match);
+                $message = MessageFactory::getMatchMessage($postfix, $red_alliance, $blue_alliance, $match, $event->webcasts);
             }
         }
         

@@ -134,9 +134,7 @@ class TBAAPI extends API {
             }
         }
 
-        $url = $this->baseURL.'/event/'.$mostRecentEvent->key;
-        $eventinfo = json_decode($this->queryTBA($url), true);
-        return new Event($eventinfo);
+        return $this->getEventInfo($mostRecentEvent->key);
     }
 
     function getTeamEventStatus($teamKey, $eventKey) {
@@ -149,6 +147,12 @@ class TBAAPI extends API {
         $url = $this->baseURL.'/match/'.$matchKey;
         $matchinfo = json_decode($this->queryTBA($url), true);
         return new Match($matchinfo);
+    }
+
+    function getEventInfo($eventKey) {
+        $url = $this->baseURL.'/event/'.$eventKey;
+        $eventinfo = json_decode($this->queryTBA($url), true);
+        return new Event($eventinfo);
     }
 
 }
@@ -321,7 +325,7 @@ class MessageFactory {
             "text"=>$message
         ), JSON_UNESCAPED_SLASHES);
     }
-    static function getMatchMessage($intro, $red_alliance, $blue_alliance, $match) {
+    static function getMatchMessage($intro, $red_alliance, $blue_alliance, $match, $webcasts = null) {
         $match_text = "";
         switch($match->comp_level) {
             case "qm":
@@ -363,6 +367,37 @@ class MessageFactory {
         $red_alliance_text = implode("\n", $red_alliance_teams);
         $match_url = "<".TBAAPI::$tba_base_match_url . $match->key."|The Blue Alliance>";
 
+        $stream_array = array();
+        $counts = array();
+        $idxs = array();
+        if($webcasts !== null) {
+            foreach($webcasts as $webcast) {
+                if(array_key_exists($webcast->type, $counts)) {
+                    $counts[$webcast->type]++;
+                } else {
+                    $counts[$webcast->type] = 1;
+                    $idxs[$webcast->type] = 1;
+                }
+            }
+            foreach($webcasts as $webcast) {
+                switch($webcast->type) {
+                    case "twitch":
+                        if($counts["twitch"] > 1) {
+                            $name = "Twitch ".$idxs["twitch"]++;
+                        } else {
+                            $name = "Twitch";
+                        }
+                        $stream_array[] = array(
+                            "type"=>"mrkdwn",
+                            "text"=>"<"."https://www.twitch.tv/".$webcast->channel."|".$name.">"
+                        );
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+
         return json_encode(array(
             "response_type"=>"in_channel",
             "text"=> $match_text,
@@ -403,12 +438,12 @@ class MessageFactory {
                 array("type"=>"divider"),
                 array(
                     "type"=>"context",
-                    "elements"=>array(
+                    "elements"=>array_merge(array(
                         array(
                             "type"=>"mrkdwn",
                             "text"=>$match_url
                         )
-                    )
+                    ), $stream_array)
                 )
             )
         ), JSON_UNESCAPED_SLASHES);

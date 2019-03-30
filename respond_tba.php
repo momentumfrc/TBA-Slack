@@ -1,5 +1,5 @@
 <?php
-require 'queries.php';
+require_once 'queries.php';
 if($_SERVER["REQUEST_METHOD"] !== "POST") {
     die("Key: ".file_get_contents("key.txt"));
 }

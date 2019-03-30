@@ -1,6 +1,6 @@
 <?php
 
-require 'settings.php';
+require_once 'settings.php';
 
 function writeToLog($string, $log) {
 	file_put_contents($log.".log", date("d-m-Y_h:i:s")."-- ".$string."\r\n", FILE_APPEND);
@@ -8,25 +8,48 @@ function writeToLog($string, $log) {
 
 abstract class API {
     protected function getURL($url, $getdata, $headers) {
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        $fullurl = $url;
-        if(count($getdata) > 0) {
-            $fullurl .= "?" . http_build_query($getdata);
-        }        
-        curl_setopt($ch, CURLOPT_URL, $fullurl);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        $result = curl_exec($ch);
-        curl_close($ch);
+        try {
+            $fullurl = $url;
+            if(count($getdata) > 0) {
+                $fullurl .= "?" . http_build_query($getdata);
+            }
+            $ch = curl_init($fullurl);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+            $result = curl_exec($ch);
+            if(curl_error($ch)) {
+                throw new Exception("CURL Error: ".curl_error($ch));
+            }
+            if(curl_getinfo($ch, CURLINFO_RESPONSE_CODE) !== 200) {
+                throw new Exception("HTTP Error: ".$result);
+            }
+        } finally {
+            if(isset($ch)) {
+                curl_close($ch);
+            }
+        }
         return $result;
+        
     }
     protected function postURL($url, $postdata, $headers) {
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        $result = curl_exec($ch);
-        curl_close($ch);
+        try {
+            $ch = curl_init($url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $postdata);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+            $result = curl_exec($ch);
+            if(curl_error($ch)) {
+                throw new Exception("CURL Error: ".curl_error($ch));
+            }
+            if(curl_getinfo($ch, CURLINFO_RESPONSE_CODE) !== 200) {
+                throw new Exception("HTTP Error: ".$result);
+            }
+        } finally {
+            if(isset($ch)) {
+                curl_close($ch);
+            }
+        }
+        
         return $result;
     }
 }
@@ -36,9 +59,14 @@ class TBAAPI extends API {
     public static $tba_base_match_url = "https://www.thebluealliance.com/match/";
     public static $tba_base_team_url = "https://www.thebluealliance.com/team/";
 
-    private $baseURL = "www.thebluealliance.com/api/v3";
+    private $baseURL = "https://www.thebluealliance.com/api/v3";
     private function getHeader() {
         return array( 'X-TBA-Auth-Key: '.Settings::$tbaKey);
+    }
+
+    private function queryTBA($url) {
+        return $this->getURL($url, array(), $this->getHeader());
+        
     }
 
     function getTeamKeyForTeam($teamNumber) {
@@ -47,25 +75,25 @@ class TBAAPI extends API {
 
     function checkValidTeamKey($teamKey) {
         $url = $this->baseURL.'/team/'.$teamKey.'/simple';
-        $teaminfo = json_decode($this->getURL($url, array(), $this->getHeader()), true);
+        $teaminfo = json_decode($this->queryTBA($url), true);
         return array_key_exists($teaminfo, "Errors") || array_key_exists($teaminfo, "errors");
     }
 
     function getTeamSimple($teamKey) {
         $url = $this->baseURL.'/team/'.$teamKey.'/simple';
-        $teaminfo = json_decode($this->getURL($url, array(), $this->getHeader()), true);
+        $teaminfo = json_decode($this->queryTBA($url), true);
         return new TeamSimple($teaminfo);
     }
 
     function getTeam($teamKey) {
         $url = $this->baseURL.'/team/'.$teamKey;
-        $teaminfo = json_decode($this->getURL($url, array(), $this->getHeader()), true);
+        $teaminfo = json_decode($this->queryTBA($url), true);
         return new Team($teaminfo);
     }
 
     function getTeamEventsSimple($teamKey) {
         $url = $this->baseURL.'/team/'.$teamKey.'/events/simple';
-        $eventinfos = json_decode($this->getURL($url, array(), $this->getHeader()), true);
+        $eventinfos = json_decode($this->queryTBA($url), true);
         $out = array();
         foreach($eventinfos as $eventinfo) {
             $out[] = new EventSimple($eventinfo);
@@ -74,7 +102,7 @@ class TBAAPI extends API {
     }
 
     function getCurrentTeamEvent($teamKey) {
-        $events = getTeamEventsSimple($teamEvent);
+        $events = $this->getTeamEventsSimple($teamKey);
         $mostRecentEvent = $events[0];
         $mostRecentEventTime = abs($mostRecentEvent->start_date->getTimestamp() - time());
         foreach($events as $event) {
@@ -85,19 +113,19 @@ class TBAAPI extends API {
         }
 
         $url = $this->baseURL.'/event/'.$mostRecentEvent->key;
-        $eventinfo = json_decode($this->getURL($url, array(), $this->getHeader()), true);
+        $eventinfo = json_decode($this->queryTBA($url), true);
         return new Event($eventinfo);
     }
 
     function getTeamEventStatus($teamKey, $eventKey) {
         $url = $this->baseURL.'/team/'.$teamKey.'/event/'.$eventKey.'/status';
-        $statusinfo = json_decode($this->getURL($url, array(), $this->getHeader()), true);
-        return new EventStatus($status);
+        $statusinfo = json_decode($this->queryTBA($url), true);
+        return new EventStatus($statusinfo);
     }
 
     function getMatchInfo($matchKey) {
         $url = $this->baseURL.'/match/'.$matchKey;
-        $matchinfo = json_decode($this->getURL($url, array(), $this->getHeader()), true);
+        $matchinfo = json_decode($this->queryTBA($url), true);
         return new Match($matchinfo);
     }
 
@@ -165,7 +193,7 @@ class Event {
         $this->address              = $jsoninfo["address"];
         $this->postal_code          = $jsoninfo["postal_code"];
         $this->gmaps_place_id       = $jsoninfo["gmaps_place_id"];
-        $this->gmaps_url            = $gmap_url["gmaps_url"];
+        $this->gmaps_url            = $jsoninfo["gmaps_url"];
         $this->lat                  = $jsoninfo["lat"];
         $this->lng                  = $jsoninfo["lng"];
         $this->location_name        = $jsoninfo["location_name"];
@@ -190,7 +218,9 @@ class Webcast {
     function __construct($jsoninfo) {
         $this->type     = $jsoninfo["type"];
         $this->channel  = $jsoninfo["channel"];
-        $this->file     = $jsoninfo["file"];
+        if(array_key_exists("file", $jsoninfo)) {
+            $this->file     = $jsoninfo["file"];
+        }
     }
 }
 
@@ -210,9 +240,10 @@ class Match {
     function __construct($jsoninfo) {
         $this->key              = $jsoninfo["key"];
         $this->comp_level       = $jsoninfo["comp_level"];
-        $this->set_number       = $jsoninfo["match_number"];
-        $this->red_alliance     = new MatchAlliance($jsoninfo["red"]);
-        $this->blue_alliance    = new MatchAlliance($jsoninfo["blue"]);
+        $this->match_number     = $jsoninfo["match_number"];
+        $this->set_number       = $jsoninfo["set_number"];
+        $this->red_alliance     = new MatchAlliance($jsoninfo["alliances"]["red"]);
+        $this->blue_alliance    = new MatchAlliance($jsoninfo["alliances"]["blue"]);
         $this->winning_alliance = $jsoninfo["winning_alliance"];
         $this->event_key        = $jsoninfo["event_key"];
         $this->time             = $jsoninfo["time"];
@@ -242,10 +273,9 @@ class SlackAPI extends API {
         return $result["ok"];
     }
 
-    function postToWebhooks($message) {
-        $json = $message->getJSON();
+    function postToWebhooks($jsondata) {
         foreach(Settings::$webhooks as $webhook) {
-            $this->postToURL($webhook, $json);
+            $this->postToURL($webhook, $jsondata);
         }
     }
 
@@ -269,24 +299,24 @@ class MessageFactory {
         $match_text = "";
         switch($match->comp_level) {
             case "qm":
-                $match_text = "Quals ".$match->match_number." coming up!";
+                $match_text = "*Quals ".$match->match_number." coming up!*";
                 break;
             case "qf":
-                $match_text = "Quarters ".$match->set_number." match ".$match->match_number." coming up!";
+                $match_text = "*Quarters ".$match->set_number." match ".$match->match_number." coming up!*";
                 break;
             case "sf":
-                $match_text = "Semis ".$match->set_number." match ".$match->match_number." coming up!";
+                $match_text = "*Semis ".$match->set_number." match ".$match->match_number." coming up!*";
                 break;
             case "f":
-                $match_text = "Finals ".$match->match_number." coming up!";
+                $match_text = "*Finals ".$match->match_number." coming up!*";
                 break;
             default:
-                $match_text = "Match coming up!";
+                $match_text = "*Match coming up!*";
                 break;
         }
         $blue_alliance_teams = array();
         foreach($blue_alliance as $team) {
-            if(array_key_exists($team, Settings::$subscribedTeams)) {
+            if(array_key_exists($team->team_number, Settings::$subscribedTeams)) {
                 $blue_alliance_teams[] = "*<".TBAAPI::$tba_base_team_url.$team->team_number."|".$team->team_number."> - ".$team->nickname."*";
             } else {
                 $blue_alliance_teams[] = "<".TBAAPI::$tba_base_team_url.$team->team_number."|".$team->team_number."> - ".$team->nickname;
@@ -297,7 +327,7 @@ class MessageFactory {
 
         $red_alliance_teams = array();
         foreach($red_alliance as $team) {
-            if(array_key_exists($team, Settings::$subscribedTeams)) {
+            if(array_key_exists($team->team_number, Settings::$subscribedTeams)) {
                 $red_alliance_teams[] = "*<".TBAAPI::$tba_base_team_url.$team->team_number."|".$team->team_number."> - ".$team->nickname."*";
             } else {
                 $red_alliance_teams[] = "<".TBAAPI::$tba_base_team_url.$team->team_number."|".$team->team_number."> - ".$team->nickname;
@@ -377,7 +407,7 @@ class MessageFactory {
         }
         $winningalliance = "none";
         $scoretext = $match->blue_alliance->score.'-'.$match->red_alliance->score;
-        if($match->red_alliance->score > $match->blue_allliance->score) {
+        if($match->red_alliance->score > $match->blue_alliance->score) {
             $winningalliance = "red";
             $scoretext = $match->blue_alliance->score.'-*'.$match->red_alliance->score.'*';
         } elseif ($match->red_alliance->score < $match->blue_alliance->score) {

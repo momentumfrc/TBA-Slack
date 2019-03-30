@@ -1,9 +1,9 @@
 <?php
-require 'settings.php';
-require 'queries.php';
+require_once 'settings.php';
+require_once 'queries.php';
 
 function verifySlack() {
-    $slack_signing_secret = Settings::$slack_signing_secret;
+    $slack_signing_secret = Settings::$slack_signing_key;
     $headers = getallheaders();
     if(! (isset($headers['X-Slack-Request-Timestamp']) && isset($headers['X-Slack-Signature']))) {
       die("Invalid headers");

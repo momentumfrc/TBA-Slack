@@ -1,7 +1,7 @@
 <?php
 
-require 'apis.php';
-require 'settings.php';
+require_once 'apis.php';
+require_once 'settings.php';
 
 interface Query {
     public function handle();
@@ -64,8 +64,7 @@ class MatchScoreQuery extends TBAQuery {
     public function handle() {
         $tba = new TBAAPI();
         $slack = new SlackAPI();
-
-        $match = $tba->getMatchInfo($this->data["match_key"]);
+        $match = $tba->getMatchInfo($this->data["match"]["key"]);
         $red_alliance = array();
         foreach($match->red_alliance->team_keys as $team_key) {
             $red_alliance[] = $tba->getTeamSimple($team_key);
@@ -112,10 +111,11 @@ class TeamScoreQuery extends SlackQuery {
         $this->opts = $opts;
     }
     public function handle() {
-        $tba = new $TBAAPI();
-        $slack = new $SlackAPI();
+        $tba = new TBAAPI();
+        $slack = new SlackAPI();
 
-        $team = array_key_first(Settings::subscribedTeams);
+        reset(Settings::$subscribedTeams);
+        $team = key(Settings::$subscribedTeams);
         if(array_key_exists(1,$this->opts)) {
             $team = $this->opts[1];
         }

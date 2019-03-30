@@ -18,10 +18,10 @@ abstract class API {
             curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
             $result = curl_exec($ch);
             if(curl_error($ch)) {
-                throw new Exception("CURL Error: ".curl_error($ch));
+                throw new CurlException("CURL Error: ".curl_error($ch));
             }
             if(curl_getinfo($ch, CURLINFO_RESPONSE_CODE) !== 200) {
-                throw new Exception("HTTP Error: ".$result);
+                throw new HTTPException($result);
             }
         } finally {
             if(isset($ch)) {
@@ -39,10 +39,10 @@ abstract class API {
             curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
             $result = curl_exec($ch);
             if(curl_error($ch)) {
-                throw new Exception("CURL Error: ".curl_error($ch));
+                throw new CurlException(curl_error($ch));
             }
             if(curl_getinfo($ch, CURLINFO_RESPONSE_CODE) !== 200) {
-                throw new Exception("HTTP Error: ".$result);
+                throw new HTTPException($result);
             }
         } finally {
             if(isset($ch)) {
@@ -54,12 +54,20 @@ abstract class API {
     }
 }
 
+class CurlException extends Exception {
+}
+class HTTPException extends Exception {
+}
+
 class TBAAPI extends API {
 
     public static $tba_base_match_url = "https://www.thebluealliance.com/match/";
     public static $tba_base_team_url = "https://www.thebluealliance.com/team/";
 
     private $baseURL = "https://www.thebluealliance.com/api/v3";
+
+    private $teamcache = array();
+
     private function getHeader() {
         return array( 'X-TBA-Auth-Key: '.Settings::$tbaKey);
     }
@@ -74,15 +82,29 @@ class TBAAPI extends API {
     }
 
     function checkValidTeamKey($teamKey) {
-        $url = $this->baseURL.'/team/'.$teamKey.'/simple';
-        $teaminfo = json_decode($this->queryTBA($url), true);
-        return array_key_exists($teaminfo, "Errors") || array_key_exists($teaminfo, "errors");
+        try {
+            $this->getTeamSimple($teamKey);
+            return true;
+        } catch (HTTPException $e) {
+            $errorinfo = json_decode($e->getMessage(), true);
+            if(array_key_exists("Errors", $errorinfo) && array_key_exists(0, $errorinfo["Errors"]) && array_key_exists("team_id", $errorinfo["Errors"][0])) {
+                return false;
+            } else {
+                throw $e;
+            }
+        }
     }
 
     function getTeamSimple($teamKey) {
-        $url = $this->baseURL.'/team/'.$teamKey.'/simple';
-        $teaminfo = json_decode($this->queryTBA($url), true);
-        return new TeamSimple($teaminfo);
+        if(array_key_exists($teamKey, $this->teamcache)) {
+            return $this->teamcache[$teamKey];
+        } else {
+            $url = $this->baseURL.'/team/'.$teamKey.'/simple';
+            $teaminfo = json_decode($this->queryTBA($url), true);
+            $team = new TeamSimple($teaminfo);
+            $this->teamcache[$teamKey] = $team;
+            return $team;
+        }
     }
 
     function getTeam($teamKey) {
@@ -178,7 +200,7 @@ class EventSimple {
 class Event {
     function __construct($jsoninfo) {
         $this->key                  = $jsoninfo["key"];
-        $this->name                 = $jsoninfo["name"];
+        $this->name                 = rtrim($jsoninfo["name"]);
         $this->event_code           = $jsoninfo["event_code"];
         $this->event_type           = $jsoninfo["event_type"];
         $this->city                 = $jsoninfo["city"];
@@ -283,6 +305,10 @@ class SlackAPI extends API {
 
 class MessageFactory {
 
+    static function getDateString($timestamp) {
+        return "<!date^".$timestamp."^{time}|".date('g:i A', $timestamp).">";
+    }
+
     static function getSimpleMessage($message) {
         return json_encode(array(
             "response_type"=>"in_channel",
@@ -295,25 +321,26 @@ class MessageFactory {
             "text"=>$message
         ), JSON_UNESCAPED_SLASHES);
     }
-    static function getMatchStartMessage($red_alliance, $blue_alliance, $match) {
+    static function getMatchMessage($intro, $red_alliance, $blue_alliance, $match) {
         $match_text = "";
         switch($match->comp_level) {
             case "qm":
-                $match_text = "*Quals ".$match->match_number." coming up!*";
+                $match_text = "*Quals ".$match->match_number;
                 break;
             case "qf":
-                $match_text = "*Quarters ".$match->set_number." match ".$match->match_number." coming up!*";
+                $match_text = "*Quarters ".$match->set_number." match ".$match->match_number;
                 break;
             case "sf":
-                $match_text = "*Semis ".$match->set_number." match ".$match->match_number." coming up!*";
+                $match_text = "*Semis ".$match->set_number." match ".$match->match_number;
                 break;
             case "f":
-                $match_text = "*Finals ".$match->match_number." coming up!*";
+                $match_text = "*Finals ".$match->match_number;
                 break;
             default:
-                $match_text = "*Match coming up!*";
+                $match_text = "*Match";
                 break;
         }
+        $match_text .= " ".$intro."*";
         $blue_alliance_teams = array();
         foreach($blue_alliance as $team) {
             if(array_key_exists($team->team_number, Settings::$subscribedTeams)) {
@@ -337,6 +364,7 @@ class MessageFactory {
         $match_url = "<".TBAAPI::$tba_base_match_url . $match->key."|The Blue Alliance>";
 
         return json_encode(array(
+            "response_type"=>"in_channel",
             "text"=> $match_text,
             "blocks"=>array(
                 array(
@@ -453,6 +481,43 @@ class MessageFactory {
                     "text"=>array(
                         "type"=>"mrkdwn",
                         "text"=>$finished_text
+                    )
+                )
+            )
+        ), JSON_UNESCAPED_SLASHES);
+    }
+    static function getHelpMessage($command) {
+        reset(Settings::$subscribedTeams);
+        $default_team = key(Settings::$subscribedTeams);
+        return json_encode(array(
+            "text"=>$command." help",
+            "blocks"=>array(
+                array(
+                    "type"=>"section",
+                    "text"=>array(
+                        "type"=>"mrkdwn",
+                        "text"=>"`".$command." score [team number]` \u{2014} Shows a team's standing at that team's most recent event. Defaults to team ".$default_team." if no team is specified."
+                    )
+                ),
+                array(
+                    "type"=>"section",
+                    "text"=>array(
+                        "type"=>"mrkdwn",
+                        "text"=>"`".$command." team [team number]` \u{2014} Returns a link to the Blue Alliance for the given team"
+                    )
+                ),
+                array(
+                    "type"=>"section",
+                    "text"=>array(
+                        "type"=>"mrkdwn",
+                        "text"=>"`".$command." match [team number]` \u{2014} Returns info about the next upcoming match. Defaults to team ".$default_team." if no team is specified."
+                    )
+                ),
+                array(
+                    "type"=>"section",
+                    "text"=>array(
+                        "type"=>"mrkdwn",
+                        "text"=>"`".$command." help` \u{2014} Displays this help message"
                     )
                 )
             )

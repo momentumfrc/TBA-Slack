@@ -18,9 +18,22 @@ function verifySlack() {
     }
 }
 
+function stopTimeout() {
+  ignore_user_abort(true);
+  ob_end_clean();
+  ob_start();
+  header('Connection: close');
+  header('Content-Length: '.ob_get_length());
+  http_response_code(200);
+  ob_end_flush();
+  ob_flush();
+  flush();
+}
+
 if($_SERVER["REQUEST_METHOD"] !== "POST") {
     die("Invalid request method");
 }
+stopTimeout();
 verifySlack();
 SlackQuery::construct($_POST)->handle();
 ?>

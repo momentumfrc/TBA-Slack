@@ -469,6 +469,10 @@ class MessageFactory {
             }
         }
         $winningalliance = "none";
+        if($match->blue_alliance->score < 0 || $match->red_alliance->score < 0) {
+            writeToLog("Badly formatted match data: ".json_encode($match),"api");
+            die();
+        }
         $scoretext = $match->blue_alliance->score.'-'.$match->red_alliance->score;
         if($match->red_alliance->score > $match->blue_alliance->score) {
             $winningalliance = "red";

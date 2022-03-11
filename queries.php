@@ -9,6 +9,7 @@ interface Query {
 
 abstract class TBAQuery implements Query {
     public static function construct($query) {
+        writeToLog("[TBA] Received webhook of type ".$query["message_type"], "queries");
         switch($query["message_type"]) {
             case "verification":
                 return new VerificationQuery($query["message_data"]);
@@ -85,6 +86,7 @@ abstract class SlackQuery implements Query {
     public static function construct($query) {
         $url = $query["response_url"];
         $opts = str_getcsv($query["text"], ' ');
+        writeToLog("[Slack] Received slashcommand of type ".$opts[0], "queries");
         switch($opts[0]) {
             case "score":
                 return new TeamScoreQuery($url, $opts);
@@ -153,7 +155,7 @@ class TeamInfoQuery extends SlackQuery {
             if(!$tba->checkValidTeamKey($teamkey)) {
                 $message = MessageFactory::getEphemeralMessage($this->opts[1]. " is not a valid team");
             } else {
-                
+
                 $teaminfo = $tba->getTeamSimple($teamkey);
                 $teamurl = TBAAPI::$tba_base_team_url . $teaminfo->team_number;
                 $message = MessageFactory::getEphemeralMessage("<".$teamurl."|".$teaminfo->team_number."> - ".$teaminfo->nickname);
@@ -204,7 +206,7 @@ class NextMatchQuery extends SlackQuery {
                 $message = MessageFactory::getMatchMessage($postfix, $red_alliance, $blue_alliance, $match, $event->webcasts);
             }
         }
-        
+
         $slack->postToURL($this->url, $message);
     }
 }

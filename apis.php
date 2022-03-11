@@ -29,7 +29,7 @@ abstract class API {
             }
         }
         return $result;
-        
+
     }
     protected function postURL($url, $postdata, $headers) {
         try {
@@ -49,7 +49,7 @@ abstract class API {
                 curl_close($ch);
             }
         }
-        
+
         return $result;
     }
 }
@@ -74,7 +74,7 @@ class TBAAPI extends API {
 
     private function queryTBA($url) {
         return $this->getURL($url, array(), $this->getHeader());
-        
+
     }
 
     function getTeamKeyForTeam($teamNumber) {
@@ -352,7 +352,7 @@ class MessageFactory {
             } else {
                 $blue_alliance_teams[] = "<".TBAAPI::$tba_base_team_url.$team->team_number."|".$team->team_number."> - ".$team->nickname;
             }
-            
+
         }
         $blue_alliance_text = implode("\n", $blue_alliance_teams);
 
@@ -469,10 +469,6 @@ class MessageFactory {
             }
         }
         $winningalliance = "none";
-        if($match->blue_alliance->score < 0 || $match->red_alliance->score < 0) {
-            writeToLog("Badly formatted match data: ".json_encode($match),"api");
-            die();
-        }
         $scoretext = $match->blue_alliance->score.'-'.$match->red_alliance->score;
         if($match->red_alliance->score > $match->blue_alliance->score) {
             $winningalliance = "red";
@@ -503,15 +499,27 @@ class MessageFactory {
                 break;
         }
 
-        if($ouralliance == null || $ournickname == null || $winningalliance === "none") {
-            $finished_text = "Match complete!\n".$match_text.' finished '.$scoretext;
-        } elseif($winningalliance === "tie") {
-            $finished_text = "Match complete!\n".$match_text.' tied '.$scoretext;
-        } elseif($ouralliance == $winningalliance) {
-            $finished_text = 'Congratulations '.$ournickname."!\n".$match_text.' won '.$scoretext;
-        } elseif($ouralliance == ($winningalliance === "red"? "blue" : "red") ) {
-            $finished_text = 'Better luck next time, '.$ournickname."\n".$match_text.' lost '.$scoretext;
+        $score_data_is_valid = $match->blue_alliance->score >= 0 && $match->red_alliance->score >= 0;
+        if($match->blue_alliance->score < 0 || $match->red_alliance->score < 0) {
+            // It seems that sometimes TBA is too quick at sending match complete notifications
+            // so that we get the notification before the final scores have been submitted.
+            // We should handle this error gracefully, and instead of printing the '-1'
+            // placeholders, we shouljd just indicate that the match is over but without printing
+            // the scores.
+            $finished_text = "Match complete!\n".$match_text.' finished';
+        } else {
+            if($ouralliance == null || $ournickname == null || $winningalliance === "none") {
+                $finished_text = "Match complete!\n".$match_text.' finished '.$scoretext;
+            } elseif($winningalliance === "tie") {
+                $finished_text = "Match complete!\n".$match_text.' tied '.$scoretext;
+            } elseif($ouralliance == $winningalliance) {
+                $finished_text = 'Congratulations '.$ournickname."!\n".$match_text.' won '.$scoretext;
+            } elseif($ouralliance == ($winningalliance === "red"? "blue" : "red") ) {
+                $finished_text = 'Better luck next time, '.$ournickname."\n".$match_text.' lost '.$scoretext;
+            }
         }
+
+
         return json_encode(array(
             "text"=>$finished_text,
             "blocks"=>array(

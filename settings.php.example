@@ -1,0 +1,20 @@
+<?php
+
+error_reporting(E_ALL & ~E_NOTICE & ~E_STRICT & ~E_DEPRECATED);
+ini_set('display_errors', TRUE);
+
+class Settings {
+
+    public static $subscribedTeams = array("4999"=>"Momentum","7042"=>"Rabbotics");
+
+    public static $webhooks = array("");
+
+    public static $slack_signing_key = "";
+
+    public static $tbaKey = "";
+
+    public static $imageURL = "https://momentum4999.com/slack-bots/BlueAllianceBot/images/";
+
+}
+
+?>

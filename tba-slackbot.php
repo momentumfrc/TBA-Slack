@@ -1,6 +1,6 @@
 <?php
 // https://www.thebluealliance.com/apidocs/webhooks
-require 'functions.php';
+require_once 'functions.php';
 
 if($_SERVER["REQUEST_METHOD"] == "POST") {
   // Get the json data and decode it into an associative array
